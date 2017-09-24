@@ -1,0 +1,351 @@
+---
+title:"HOME WORK 2"
+author:"OJIAMBO IVAN"
+output: 
+  pdf_document: default
+  html_document: default
+  pdf:default
+---
+
+#Exe1-2
+The data was seperated by tabs and it has 12 columns and 32561 rows.  I have replaced all the missing values with NA
+```{r}
+
+unclean_data <- read.csv( "data.csv",  sep = "\t", strip.white = TRUE, na.strings = c("NA", "?"));
+#type of data
+str(unclean_data)
+
+```
+I have removed Column X because  it does not make sense since the rows are always numbered automatically
+```{r}
+unclean_data[,c("X")] <- NULL
+
+```
+## 1. Analysing column Age
+There are  97 people without age value.
+```{r}
+
+sum(is.na(unclean_data$age))
+```
+
+The minimum  and maximum age in the data is -57 years and  320 years respectively, I have subsituted these values  with  missing value because its unrealistic to have negative vale as age neither is it realistic to be over 320 years. 
+i have assumed one can not be over 100 years and below 1 year
+
+```{r}
+summary(unclean_data$age)
+
+unclean_data$age[unclean_data$age < 1] <- NA
+unclean_data$age[unclean_data$age  >100] <- NA
+
+
+
+
+```
+
+
+```{r}
+hist(unclean_data$age, xlab = "Age", ylab = "Frequency", main = "Age Distribution")
+```
+ Age is a ratio
+
+## 2. Analysing Workclass Column
+There are 1836 people who are not working.
+```{r}
+sum(is.na(unclean_data$workclass))
+
+```
+
+There were 10 people who had **privat** as there working class, I decided to add them to **Private** work class. I assumed it was  typo since privat was not making sense.
+
+```{r}
+library(plyr)
+ revalue(unclean_data$workclass, c("privat" = "Private")) -> unclean_data$workclass
+
+counts <- table(unclean_data$workclass)
+barplot(counts,  main = "Work class Distribution", xlab = "Work class", ylab = "freqency", cex.names = 0.6 ) 
+
+``` 
+
+Work class is of nominal data type.
+
+
+## 3. Analysing Column Education
+Everyone atlest went to school. ie there is no missing value
+```{r}
+library(plyr)
+sum(is.na(unclean_data$education))
+counts <-table( unclean_data$education)
+ 
+unclean_data$education[unclean_data$education =="12th"] <- "1st-12th"
+
+barplot(counts, main = "Education Distribution", xlab = "Education Level", ylab = "frequency", cex.names = 0.6)
+
+```
+Education is of ordinal type
+
+
+## Analysing Attribute occupation
+There are 1843 people who do not have occupation
+```{r}
+sum(is.na(unclean_data$occupation))
+```
+
+
+```{r}
+counts <- table(unclean_data$occupation)
+
+barplot(counts,  main = "Occupation Distribution by population", xlab = "Jobs", cex.names = 0.6 ,ylab = "frequency")
+```
+
+occupation is of nominal data type.
+
+
+## 5. Analysing capital gain
+
+There are no missing value for capital gain. The maximum value is 99999 and the minimum value is 0
+
+```{r}
+summary(unclean_data$capital.gain)
+
+plot(density(unclean_data$capital.loss), main = "Kernal density plots showing values of capital Loss")
+
+```
+
+Capital gain attribute is of ratio data type.
+
+## 6. Analysing capital loss
+
+There is no missing value for capital loss and the maximum value is 4356 and the minimum value is 0
+```{r}
+library(plyr, warn.conflicts = FALSE)
+summary(unclean_data$capital.loss)
+
+plot(density(unclean_data$capital.gain), main = "Kernal density plots showing values of capital gain")
+```
+
+Capital loss attribute is of ratio data type.
+
+
+## 7. Analysing column Native country
+There are 583 people who are misiing native country
+```{r}
+sum(is.na(unclean_data$native.country))
+```
+
+There were 3 countries that shared almost the name ie one was called UnitedStates, Unitedstates and United-States. I replaced UnitedStates and Unitedstates with United-States because there are no countries with such names and I assumed it was a typo that was made.
+
+```{r}
+library(plyr)
+ revalue( unclean_data$native.country, c("UnitedStates" = "United-States", "Unitedstates" = "United-States" )) ->  unclean_data$native.country
+```
+
+
+```{r}
+counts <- table(unclean_data$native.country)
+barplot(counts, main = "People in each country ", xlab = " Native countries", cex.names = 0.6, ylab = "frequency", )
+```
+
+## 8. Analysing column salaries
+I rounded off the salary values to 2 decimal places
+```{r}
+unclean_data$salaries <- format(round(unclean_data$salaries, 2), nsmall = 2) 
+unclean_data$salaries <- as.numeric(unclean_data$salaries)
+
+plot(density(unclean_data$salaries), main = "Salary Distribution",  xlab = "salary", ylab = "Frequency")
+
+```
+salary is a ratio.
+
+
+
+## 10. Analysing  column Male. 
+1 is used to denote males and there 21790 males
+```{r}
+data.frame(table(unclean_data$male))
+
+```
+
+## 11. Analysing Column  Female
+
+1 is used to analyse females and there 10771 females
+
+```{r}
+library(plyr, warn.conflicts = FALSE)
+
+table(unclean_data$female)
+```
+
+#Exercise 3
+
+## a)
+-I first grouped the data by occupation and education using the group by function
+
+-I then calculated the average salary for each occupation using summarise function
+
+```{r}
+library(dplyr, warn.conflicts = FALSE)
+library(ggplot2, warn.conflicts = FALSE)
+library(tidyr, warn.conflicts = FALSE)
+data.occupation.education  = group_by(unclean_data, occupation, education)
+data.avg.sal               = summarise(data.occupation.education, average_salary=mean(salaries))
+data.table <- spread(data.avg.sal, key=education, value=average_salary)
+data.table
+```
+
+##b
+```{r}
+data.long <- gather(data.table, education, AvgSalary, "10th":"Some-college")
+data.long
+
+```
+
+##c)
+```{r}
+library(ggplot2, warn.conflicts = FALSE)
+
+ggplot(data.long,  aes(x=education, y=occupation)) +  geom_tile(aes(x=education, y=occupation, fill=AvgSalary))
+
+
+``` 
+
+##d)
+```{r}
+#data <- data.frame(lapply(data.long, factor))
+
+
+data.long$education <- factor(data.long$education, levels = c("Preschool", "1st-4th", "5th-6th", "7th-8th", "9th", "11th", "12th", "HS-grad", "Assoc-voc",  "Assoc-acdm", "levels",
+                                                          "Bachelors", "Prof-school", "Masters", "Doctorate" ) , ordered = TRUE)
+
+
+ggplot(data.long,  aes(x=education, y=occupation)) +  geom_tile(aes(x=education, y=occupation, fill=AvgSalary)) +theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=90, hjust=1))
+
+```
+
+##e)  List 3 interesting facts that you can read out from this plot.
+
+-Those who ended in preschool can not work in armed forses, protective services, sales, Tech-suppor and transport.
+-Those who have masters they atlest everyone has a job.
+
+
+##f) Create another plot of this dataset that you think conveys interesting information
+
+I first grouped the data by occupation  and the i computed the average salary of each occupation using mean function
+```{r}
+grouped_data <- group_by(unclean_data, occupation)
+summ_data <- summarise(grouped_data, AvgSalary=mean(salaries))
+barplot(summ_data$AvgSalary, names.arg=summ_data$occupation, horiz = TRUE, las=1, cex.names = 0.6, xlab = "occupation", ylab = "Average salary", main = "Bar graph showing average salary per department")
+
+
+```
+
+- on average those in the exec-managerial and prof-speciality department earn more than any other department.
+-Those in the riv-house-serv  department earn the least followed by those in the Handlers-cleaners and those in other service department.
+-The income difference between departments is not high.
+
+
+#Exe4
+##a
+The data has 100000 rows and 15 attributes
+```{r}
+
+df <- read.csv("instacart.csv")
+str(df)
+
+```
+
+**order_id**
+Is of nominal data type. It describes the order of each client who buys a product.
+
+**user_id** is a nominal since its used to identify each person. 
+
+**eval_set**
+```{r}
+levels(df$eval_set)
+levels(as.factor(df$order_dow))
+```
+its of Nominal attribute. 
+
+**order_number**  its a ratio
+```{r}
+levels(as.factor(df$order_number))
+```
+
+**order_dow** its a ratio because the values are integer values.
+```{r}
+levels(as.factor(df$order_dow))
+```
+
+**order_hour_of_day** its a an ordinal value 
+```{r}
+levels(as.factor(df$order_hour_of_day))
+```
+
+** days_since_prior_order**  its an interval
+```{r}
+levels(as.factor(df$days_since_prior_order))
+
+```
+**product_id** its a nominal value because it uniquely identifies each product
+
+**add_to_cart_order** its a ratio
+
+**reordered** its an ordinal value.
+
+**product_name** its a nominal value because it uniquely identifies the product
+
+**department_id** its 
+```{r}
+levels(as.factor(df$department))
+```
+
+**aisle** its a nominal value that uniquely identifies each aisle
+```{r}
+levels(as.factor(df$aisle_id))
+```
+*
+**aisle** its a nominal value because each aisle has its own unique name
+
+**department** its a nominal value because each department has its own name
+```{r}
+levels(df$department)
+```
+
+#b
+```{r}
+library(ggplot2, warn.conflicts = FALSE)
+grouped_data <- group_by(df, df$order_hour_of_day)
+
+ggplot(grouped_data, aes(x=grouped_data$order_hour_of_day))+ geom_histogram() + facet_grid(. ~grouped_data$order_dow)
+
+```
+##c)  
+
+  -its evident from the histogram that between 10 and 15 hours , there is high turn over of sales for the entire week and sunday having the highes turn over with over 2000 clients.
+
+- its also evident from the histogram that the least sales  in the week are made between 0 and 5 hours.
+
+- its also evident that all the days of the week the sales tend take a similar patter.
+
+
+##d)
+```{r}
+grouped_data <- group_by(df, df$order_dow, df$department)
+
+ggplot(grouped_data, aes(x=grouped_data$order_dow))+ geom_histogram() 
+```
+
+```{r}
+counts <- table( df$department, df$order_dow)
+barplot(counts, main="Departmental good bought on different days of the week",
+  xlab="Days of the Week", col=c("darkblue","red","yellow","green","orange", "black","DeepPink","Pink", "Lavender","DarkMagenta","Maroon","white","brown","Gainsboro","DarkSlateGray","Chocolate"),
+ 	legend = rownames(counts))
+
+
+```
+
+-from the stacked bar graph its obvious that the produce department has the highest sells through the week.
+
+-diary eggs department has the second highest sells during the course of the weeek
+
+-bulk department has the least sells through the week.
