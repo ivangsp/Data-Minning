@@ -1,0 +1,197 @@
+---
+title: "HomeWork3"
+author: "Ivan Ojiambo"
+date: "October 5, 2017"
+output: pdf_document
+---
+#Exe1
+```{r setup, include=FALSE}
+sample_n <- function(N, probs) {
+   count <- 0
+   for(i in 1:100){
+      sample <- table(sample(c(1,2,3,4), N, replace = T, prob = probs))
+      sample_prob <- prop.table(sample)
+      error <- as.vector(abs(probs - sample_prob))
+      if(all(error < 0.005)){
+        count <- count+1
+      } 
+   }
+   
+ return(count);  
+}
+```
+##a 
+I first tried out with sample size N = 100 and I got a percentage range of 0 to 1
+```{r}
+prob <-  c(0.1, 0.2, 0.3,0.4)
+sample_n(100, prob)
+   
+```
+I then  tried out with sample size  N = 500 and the ouput also resulted in a percentage range of 0 to 2
+```{r}
+sample_n(500, prob)
+   
+```
+I now increased the sample size N  to 4000 and I got a percentage range of 12 to 25
+```{r}
+sample_n(4000, prob)
+   
+```
+After three atemptsof with a small sample size it was clear to me that the sample size was very large and so i tried out N=30000. The results showed a percentage range of 80 to 92%.
+```{r}
+sample_n(30000, prob)
+   
+```
+
+I finally tried out with sample size N = 45000 and it resulted in percentage range of 93 to 97%.
+Since the sample size is supposed to be as small as possible, I decided to take the sample size as 45000 since most of the results were above 95%
+```{r}
+sample_n(45000, prob)
+   
+```
+##b
+with sample size N =4000, it resulted in a percentage range of 5 to 20
+```{r}
+prob2 <-  c(0.25, 0.25, 0.25, 0.25)
+sample_n(4000, prob2)
+```
+It so happend that with this distribution, with sample size N=44000 ,the percetage was was over 95%
+```{r}
+sample_n(4000, prob2)
+```
+
+#Exe2
+
+```{r}
+sample_n2 <- function(N, prob){
+  
+  count <- 0
+  for(i in 1:100){
+    error <-  (rnorm(4, mean = 0, sd = sqrt(prob*N)))/N
+    if(all(error < 0.005 & error >-0.005)){
+        count <- count+1
+      } 
+    
+  }
+ 
+return(count)
+}
+```
+
+##a
+
+It appears that with a sample size of N= 45000, it generetes a percentage with the range of 80- 90%
+```{r}
+prob <- c(0.1, 0.2, 0.3, 0.4)
+sample_n2(45000, prob)
+```
+I decided to increase to the samplesize to N= 66000. it generates the percentage range of over 95%.
+
+
+```{r}
+sample_n2(66000, prob)
+
+```
+with a same sample size as that in the computation method, the statistical approach takes less time  to generate the percentages, infact less than a second compared to the computation approach.
+
+The sample size is 66000 and its clear that using the statistical approach the sample size will be higher than that with computational approach.
+
+
+##b
+with the second distribution the the percentage is above 95% when N=64000
+
+```{r}
+prob <- c(0.25, 0.25, 0.25, 0.25)
+sample_n2(64000, prob)
+```
+
+##Exe3
+-I assumed column X was auto generated from the database and it did not have any meaning to the data set so I had to remove it
+-Am assuming that the if there exists empty values , I perform pairwise deletion.
+-Am calculating correlation using the spearman's correlation.
+```{r}
+data <- read.csv(file = "exe3.csv", header = TRUE)
+data$X <- NULL
+cor_matrix <- cor(data, use = "pairwise.complete.obs", method = "spearman");
+cor_matrix[lower.tri(cor_matrix,diag=TRUE)] <- 0
+min(cor_matrix)
+max(cor_matrix)
+
+shuffled_data <- data
+for(i in 1:100){
+  shuffled_data[,i] <- shuffled_data[sample(nrow(shuffled_data)),i]
+  
+}
+min_cor <- min(corr_shuffled_data)
+max_cor <- max(corr_shuffled_data)
+
+count <- 0
+col_correlated <- function(){
+  for(i in 1:100){
+    for(k in 1:100){
+   
+      if(i !=k){
+         cor_col_i <- cor(data[,i], data[,k])
+         if(cor_col_i >max_cor | cor_col_i <min_cor ){
+           count <- count+1
+         }
+      }
+    }
+  }
+  return(count)
+  
+}
+col_correlated()
+
+
+```
+#Exe4
+
+##t-test
+
+```{r}
+beer <- c(27, 19, 20, 20, 23, 17, 21, 24, 31, 26, 28, 20, 27, 19, 25, 31, 24, 28, 24, 29, 21, 21, 18, 27, 20)
+water <- c(21, 19, 13, 22, 15, 22, 15, 22, 20, 12, 24, 24, 21, 19, 18, 16, 23, 20) 
+mean_beer <- mean(beer)
+mean_water <- mean(water)
+mean_diffs <- mean_beer - mean_water
+mean_diffs
+boxplot(beer,water)
+
+```
+Ho: The difference between the average number of mosquitoes on beer drinkers  and aveerage number of mosquitoes on people       who drunk water is not equal to 4.377
+H1: The difference between the average number of mosquitoes on beer drinkers  and aveerage number of mosquitoes on people       who drunk water is equal to 4.377
+ 
+```{r}
+
+t.test(beer, water)
+
+```
+From the t-test value, p=0.00074 which is less than 0.005 therefore the we neget the null hypothesis and conclude that the difference in the average number of mosquitoes both beer and water drinkers is significantly equal to 4.37
+
+
+#using permutation test
+
+
+H0: differennce in mean of mosquito on  beer  and waters drinkers is not equal to 4.37
+H1:The differennce in mean of beer drinkers and waters =4.37
+
+```{r}
+combin_beer_water <- c(beer,water)
+
+nsimulation <- 10000
+diff_mean <- rep(NA, nsimulation)
+
+for(i  in 1:nsimulation){
+ shuffled_data <-  sample(combin_beer_water)
+ mean_beer <- mean(shuffled_data[1:length(beer)])
+ mean_water <- mean(shuffled_data[(length(beer)+1):length(a)])
+ diff_mean[i] <- mean_beer - mean_water
+  
+}
+hist.default(diff_mean)
+sum(diff_mean == 4.377)/nsimulation
+
+```
+
+From the histogram and p= 0, its clear that mean difference is less likely to occur by chance and therefore we negate the null hypothesis and conclude that the mean difference is signficantly equal to 4.37
